@@ -9,7 +9,7 @@ jobs:
   trigger-ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: twz123/rerun-pr-workflows-action@v0.2
+      - uses: twz123/rerun-pr-workflows-action@v0.3
         with:
           workflow: on-pr-main
 
