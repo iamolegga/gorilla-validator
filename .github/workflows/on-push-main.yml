@@ -1,0 +1,14 @@
+name: on-push-main
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: twz123/rerun-pr-workflows-action@v0.2
+        with:
+          workflow: on-pr-main
