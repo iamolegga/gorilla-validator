@@ -4,7 +4,7 @@ go 1.23.3
 toolchain go1.24.1
 
 require (
-	github.com/go-playground/validator/v10 v10.25.0
+	github.com/go-playground/validator/v10 v10.26.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/schema v1.4.1
 	github.com/stretchr/testify v1.10.0
