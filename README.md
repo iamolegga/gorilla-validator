@@ -1,11 +1,17 @@
 # gorilla-validator
 
 
-[![PkgGoDev](https://pkg.go.dev/badge/github.com/iamolegga/gorilla-validator)](https://pkg.go.dev/github.com/iamolegga/gorilla-validator) [![Go Report Card](https://goreportcard.com/badge/github.com/iamolegga/gorilla-validator)](https://goreportcard.com/report/github.com/iamolegga/gorilla-validator) ![Codacy coverage](https://img.shields.io/codacy/coverage/08ef22b3391240aa8806a48e6891e3d6) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/08ef22b3391240aa8806a48e6891e3d6)](https://app.codacy.com/gh/iamolegga/gorilla-validator/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/iamolegga/gorilla-validator)](https://pkg.go.dev/github.com/iamolegga/gorilla-validator) [![Go Report Card](https://goreportcard.com/badge/github.com/iamolegga/gorilla-validator)](https://goreportcard.com/report/github.com/iamolegga/gorilla-validator) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/iamolegga/gorilla-validator/on-push-main.yml) ![Codacy coverage](https://img.shields.io/codacy/coverage/08ef22b3391240aa8806a48e6891e3d6) [![Codacy Badge](https://app.codacy.com/project/badge/Grade/08ef22b3391240aa8806a48e6891e3d6)](https://app.codacy.com/gh/iamolegga/gorilla-validator/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 HTTP request validation middleware for Gorilla Mux.
 
 It simplifies the process of validating and extracting data from various HTTP request sources, including URL parameters, query strings, form data, JSON, and XML.
+
+## Installation
+
+```sh
+go get github.com/iamolegga/gorilla-validator
+```
 
 ## Features
 
