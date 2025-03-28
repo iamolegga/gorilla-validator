@@ -12,3 +12,23 @@ jobs:
       - uses: twz123/rerun-pr-workflows-action@v0.2
         with:
           workflow: on-pr-main
+
+  test-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup go
+        uses: actions/setup-go@v5.4.0
+        with:
+          go-version: stable
+
+      - run: go mod download
+      - run: go test ./... -coverprofile=c.out
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@v1.3.0
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: c.out
+          force-coverage-parser: go

@@ -13,9 +13,11 @@ import (
 )
 
 type TestSchema struct {
-	ID    int    `schema:"id" validate:"required"`
-	Name  string `schema:"name" validate:"required"`
-	Email string `schema:"email" validate:"required,email"`
+	ID        int    `schema:"id" validate:"required"`
+	Name      string `schema:"name" validate:"required"`
+	Email     string `schema:"email" validate:"required,email"`
+	Verified  bool   `schema:"verified"`
+	FollowIDs []int  `schema:"follow_ids"`
 }
 
 type ParamsTestSchema struct {
@@ -128,8 +130,38 @@ func TestValidateFormError(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
-func TestValidateJSON(t *testing.T) {
-	body := `{"id":123,"name":"John","email":"john@example.com"}`
+func TestValidateFormErrorInvalid(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/test", nil)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := gv.Validate(TestSchema{}, gv.Form)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "should not reach here")
+	}))
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestValidateFormErrorInvalid2(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/test?;&", nil)
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	rr := httptest.NewRecorder()
+
+	handler := gv.Validate(TestSchema{}, gv.Form)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "should not reach here")
+	}))
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestValidateJSONOK(t *testing.T) {
+	body := `{"id":123,"name":"John","email":"john@example.com","verified":true,"follow_ids":[456,789]}`
 	req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
 	req.Header.Add("Content-Type", "application/json")
 
@@ -140,6 +172,8 @@ func TestValidateJSON(t *testing.T) {
 		assert.Equal(t, 123, data.ID)
 		assert.Equal(t, "John", data.Name)
 		assert.Equal(t, "john@example.com", data.Email)
+		assert.Equal(t, true, data.Verified)
+		assert.Equal(t, []int{456, 789}, data.FollowIDs)
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -164,8 +198,24 @@ func TestValidateJSONError(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
+func TestValidateJSONErrorInvalid(t *testing.T) {
+	body := `{"id":`
+	req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
+	req.Header.Add("Content-Type", "application/json")
+
+	rr := httptest.NewRecorder()
+
+	handler := gv.Validate(TestSchema{}, gv.JSON)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "should not reach here")
+	}))
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
 func TestValidateXMLOK(t *testing.T) {
-	body := `<TestSchema><id>123</id><name>John</name><email>john@example.com</email></TestSchema>`
+	body := `<TestSchema><id>123</id><name>John</name><email>john@example.com</email><follow_ids>456</follow_ids><follow_ids>789</follow_ids></TestSchema>`
 	req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(body))
 	req.Header.Add("Content-Type", "application/xml")
 
@@ -176,6 +226,8 @@ func TestValidateXMLOK(t *testing.T) {
 		assert.Equal(t, 123, data.ID)
 		assert.Equal(t, "John", data.Name)
 		assert.Equal(t, "john@example.com", data.Email)
+		assert.Equal(t, false, data.Verified)
+		assert.Equal(t, []int{456, 789}, data.FollowIDs)
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -223,4 +275,19 @@ func TestErrorHandler(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 	assert.True(t, called)
+}
+
+func TestWrongSourcePanics(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/test/abc", nil)
+	req = mux.SetURLVars(req, map[string]string{"id": "abc"})
+
+	rr := httptest.NewRecorder()
+
+	handler := gv.Validate(ParamsTestSchema{}, gv.Source("UNEXISTING_SOURCE"))(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Fail(t, "should not reach here")
+	}))
+
+	assert.Panics(t, func() {
+		handler.ServeHTTP(rr, req)
+	})
 }

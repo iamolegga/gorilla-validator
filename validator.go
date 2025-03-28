@@ -109,7 +109,20 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 						currentElement = token.Name.Local
 					case xml.CharData:
 						if currentElement != "" {
-							result[currentElement] = string(token)
+							// Handle repeated elements by converting to array as needed
+							if existing, ok := result[currentElement]; ok {
+								switch v := existing.(type) {
+								case string:
+									// If element already exists, convert to array
+									result[currentElement] = []any{v, string(token)}
+								case []any:
+									// If it's already an array, append
+									result[currentElement] = append(v, string(token))
+								}
+							} else {
+								// First occurrence of this element
+								result[currentElement] = string(token)
+							}
 							currentElement = ""
 						}
 					}
