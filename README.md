@@ -62,6 +62,8 @@ router.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
 ```go
 // JSON body validation example
 // Define the schema for JSON body
+// NOTE: You must set `json` tags for all fields you want to decode from JSON.
+// The standard library does NOT use `schema` tags for JSON or XML decoding.
 type BodyJSON struct {
     Name     string `json:"name" schema:"name" validate:"required,min=2"`
     Email    string `json:"email" schema:"email" validate:"required,email"`
@@ -79,6 +81,7 @@ router.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
 ```go
 // Form data validation example
 // Define the schema for form data
+// NOTE: For form/query/params, only the `schema` tag is needed.
 type BodyForm struct {
     Email    string `schema:"email" validate:"required,email"`
     Password string `schema:"password" validate:"required"`
@@ -96,6 +99,7 @@ router.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
 ```go
 // Multiple validators example
 // Define schemas for URL parameters and JSON body
+// NOTE: Always specify `json` or `xml` tags for JSON/XML, and `schema` for form/query/params.
 type MultiParams struct {
     ID int `schema:"id" validate:"required,gt=0"`
 }
@@ -113,6 +117,15 @@ router.HandleFunc("/users/{id}", func(w http.ResponseWriter, r *http.Request) {
     Use(gv.Validate(MultiParams{}, gv.Params)).
     Use(gv.Validate(MultiBody{}, gv.JSON))
 ```
+
+## Struct Tag Requirements
+
+**Important:**
+
+- The Go standard library decoders (`encoding/json`, `encoding/xml`) **do not** use the `schema` tag.
+- You **must** specify `json` and/or `xml` tags for fields you want to decode from JSON or XML.
+- The `schema` tag is only used for form, query, and params sources.
+- If a tag is missing, the field name (case-sensitive) will be used by the decoder, which may not match your input.
 
 ## Validation Rules
 
