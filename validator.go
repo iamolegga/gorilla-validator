@@ -44,7 +44,7 @@ const (
 	XML    Source = "XML"
 )
 
-var schemaDecoder = schema.NewDecoder()
+var SchemaDecoder = schema.NewDecoder()
 
 func Validate(schema any, src Source) mux.MiddlewareFunc {
 	return func(handler http.Handler) http.Handler {
@@ -58,13 +58,13 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 				for k, v := range vars {
 					varsFixed[k] = []string{v}
 				}
-				err := schemaDecoder.Decode(schemaValue, varsFixed)
+				err := SchemaDecoder.Decode(schemaValue, varsFixed)
 				if err != nil {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
 				}
 			case Query:
-				err := schemaDecoder.Decode(schemaValue, r.URL.Query())
+				err := SchemaDecoder.Decode(schemaValue, r.URL.Query())
 				if err != nil {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
@@ -75,7 +75,7 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
 				}
-				err = schemaDecoder.Decode(schemaValue, r.PostForm)
+				err = SchemaDecoder.Decode(schemaValue, r.PostForm)
 				if err != nil {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
@@ -88,7 +88,7 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 					return
 				}
 				data := convertToMapStringSlice(jsonData)
-				err = schemaDecoder.Decode(schemaValue, data)
+				err = SchemaDecoder.Decode(schemaValue, data)
 				if err != nil {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
@@ -127,7 +127,7 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 						}
 					}
 				}
-				if err := schemaDecoder.Decode(schemaValue, convertToMapStringSlice(result)); err != nil {
+				if err := SchemaDecoder.Decode(schemaValue, convertToMapStringSlice(result)); err != nil {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
 				}
