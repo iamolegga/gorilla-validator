@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"net/http"
 	"reflect"
 
@@ -44,8 +43,10 @@ const (
 	XML    Source = "XML"
 )
 
+// SchemaDecoder is an instance of the schema decoder from the gorilla/schema package, could be used for setting custom options
 var SchemaDecoder = schema.NewDecoder()
 
+// Validate is a middleware factory function that validates the input data based on the provided schema and source
 func Validate(schema any, src Source) mux.MiddlewareFunc {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -81,53 +82,12 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 					return
 				}
 			case JSON:
-				var jsonData map[string]any
-				err := json.NewDecoder(r.Body).Decode(&jsonData)
-				if err != nil {
-					currentErrorHandler(err).ServeHTTP(w, r)
-					return
-				}
-				data := convertToMapStringSlice(jsonData)
-				err = SchemaDecoder.Decode(schemaValue, data)
-				if err != nil {
+				if err := json.NewDecoder(r.Body).Decode(schemaValue); err != nil {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
 				}
 			case XML:
-				decoder := xml.NewDecoder(r.Body)
-				result := make(map[string]any)
-				var currentElement string
-
-				for {
-					tok, err := decoder.Token()
-					if err != nil {
-						break
-					}
-
-					switch token := tok.(type) {
-					case xml.StartElement:
-						currentElement = token.Name.Local
-					case xml.CharData:
-						if currentElement != "" {
-							// Handle repeated elements by converting to array as needed
-							if existing, ok := result[currentElement]; ok {
-								switch v := existing.(type) {
-								case string:
-									// If element already exists, convert to array
-									result[currentElement] = []any{v, string(token)}
-								case []any:
-									// If it's already an array, append
-									result[currentElement] = append(v, string(token))
-								}
-							} else {
-								// First occurrence of this element
-								result[currentElement] = string(token)
-							}
-							currentElement = ""
-						}
-					}
-				}
-				if err := SchemaDecoder.Decode(schemaValue, convertToMapStringSlice(result)); err != nil {
+				if err := xml.NewDecoder(r.Body).Decode(schemaValue); err != nil {
 					currentErrorHandler(err).ServeHTTP(w, r)
 					return
 				}
@@ -148,34 +108,7 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 	}
 }
 
+// Validated is a function that returns the validated data from the request context
 func Validated[T any](r *http.Request, src Source) T {
 	return r.Context().Value(sourceKey(src)).(T)
-}
-
-func convertToMapStringSlice(input map[string]any) map[string][]string {
-	result := make(map[string][]string)
-	for key, value := range input {
-		switch v := value.(type) {
-		case string:
-			result[key] = []string{v}
-		case float64:
-			result[key] = []string{fmt.Sprintf("%v", v)}
-		case bool:
-			result[key] = []string{fmt.Sprintf("%v", v)}
-		case []any:
-			var strSlice []string
-			for _, elem := range v {
-				strSlice = append(strSlice, fmt.Sprintf("%v", elem))
-			}
-			result[key] = strSlice
-		default:
-			result[key] = []string{fmt.Sprintf("%v", v)}
-		}
-	}
-	return result
-}
-
-type Element struct {
-	XMLName xml.Name
-	Value   string `xml:",chardata"`
 }
