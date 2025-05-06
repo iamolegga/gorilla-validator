@@ -46,6 +46,13 @@ const (
 // SchemaDecoder is an instance of the schema decoder from the gorilla/schema package, could be used for setting custom options
 var SchemaDecoder = schema.NewDecoder()
 
+var currentValidator = validator.New()
+
+// Validator allows setting a custom validator instance
+func Validator(v *validator.Validate) {
+	currentValidator = v
+}
+
 // Validate is a middleware factory function that validates the input data based on the provided schema and source
 func Validate(schema any, src Source) mux.MiddlewareFunc {
 	return func(handler http.Handler) http.Handler {
@@ -95,8 +102,7 @@ func Validate(schema any, src Source) mux.MiddlewareFunc {
 				panic("unknown source: " + src)
 			}
 
-			validate := validator.New()
-			err := validate.Struct(schemaValue)
+			err := currentValidator.Struct(schemaValue)
 			if err != nil {
 				currentErrorHandler(err).ServeHTTP(w, r)
 				return
